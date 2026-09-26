@@ -351,6 +351,11 @@
       .vendor-grid { grid-template-columns: 1fr; }
       .data-cards, .budget-grid { grid-template-columns: 1fr; }
       .bins { grid-template-columns: 1fr; }
+      .classify-options { grid-template-columns: 1fr; }
+      .classify-progress { align-items:flex-start; flex-direction:column; }
+      .classify-progress-track { width:100%; max-width:none; }
+      .classify-summary-row { grid-template-columns:1fr; gap:4px; }
+      .classify-summary-row span:last-child { text-align:left; }
       .maturity-item { grid-template-columns: 1fr; }
       .tool-label { display: none; }
       .score-grid { grid-template-columns: 1fr; }
@@ -464,13 +469,37 @@
     .consequence { margin-top:10px; padding:11px 13px; background:var(--surface-2); border-radius:13px; font-size:.88rem; color:var(--muted); }
 
     .data-card { position:relative; overflow:hidden; transition:.2s ease; }
-    .data-card::before { content:"ITEM"; position:absolute; top:7px; right:9px; font-size:.52rem; letter-spacing:.08em; font-weight:950; color:var(--muted); opacity:.55; }
     .data-card.selected { border-color:var(--tl-yellow); box-shadow:0 0 0 3px color-mix(in srgb,var(--tl-yellow) 22%,transparent); transform:translateY(-2px); }
     .bin { text-align:left; cursor:pointer; transition:.2s ease; position:relative; overflow:hidden; }
     .bin:hover { border-color:var(--accent); transform:translateY(-2px); }
     .bin::after { content:"ESCOLHA"; position:absolute; bottom:7px; right:9px; font-size:.5rem; letter-spacing:.08em; color:var(--muted); opacity:.55; font-weight:950; }
     .packet-counter { margin-top:14px; display:flex; gap:8px; align-items:center; font-size:.82rem; color:var(--muted); }
     .packet-led { width:9px; height:9px; border-radius:50%; background:var(--tl-lime); box-shadow:0 0 0 4px color-mix(in srgb,var(--tl-lime) 12%,transparent); }
+    .classify-wrap { display:grid; gap:18px; }
+    .classify-progress { display:flex; align-items:center; justify-content:space-between; gap:12px; color:var(--muted); font-size:.86rem; font-weight:800; }
+    .classify-progress-track { height:8px; flex:1; max-width:280px; background:var(--surface-3); border-radius:999px; overflow:hidden; border:1px solid var(--line); }
+    .classify-progress-track span { display:block; height:100%; background:linear-gradient(90deg,var(--tl-green),var(--tl-lime)); border-radius:inherit; transition:width calc(.35s * var(--motion)) ease; }
+    .classify-card { padding:clamp(20px,4vw,30px); border:1px solid var(--line); border-radius:22px; background:var(--surface-2); }
+    .classify-card .count { color:var(--accent); font-size:.76rem; font-weight:950; letter-spacing:.08em; text-transform:uppercase; }
+    .classify-card h3 { font-size:clamp(1.25rem,3vw,1.65rem); margin-top:8px; }
+    .classify-card p { color:var(--muted); margin-top:7px; }
+    .classify-question { margin-top:18px; font-weight:900; font-size:1rem; }
+    .classify-options { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin-top:12px; }
+    .classify-option { min-height:72px; border:1px solid var(--line); border-radius:16px; background:var(--surface); color:var(--text); cursor:pointer; padding:14px 12px; text-align:left; display:flex; gap:10px; align-items:flex-start; transition:transform calc(.18s * var(--motion)) ease,border-color .18s ease,background .18s ease; }
+    .classify-option:hover { transform:translateY(-2px); border-color:var(--accent); }
+    .classify-option strong { display:block; }
+    .classify-option span { display:block; color:var(--muted); font-size:.78rem; margin-top:3px; line-height:1.35; }
+    .classify-option.selected { border-color:var(--accent); box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 12%,transparent); }
+    .classify-option.correct { background:var(--lime-soft); border-color:color-mix(in srgb,var(--tl-green) 60%,var(--line)); }
+    .classify-option.wrong { background:var(--danger-soft); border-color:color-mix(in srgb,var(--danger) 55%,var(--line)); }
+    .classify-option:disabled { opacity:1; cursor:default; transform:none; }
+    .classify-mini-feedback { display:none; margin-top:14px; padding:14px 16px; border-radius:15px; border:1px solid var(--line); background:var(--surface); }
+    .classify-mini-feedback.show { display:block; animation:fadeUp calc(.25s * var(--motion)) ease both; }
+    .classify-mini-feedback.good { background:var(--lime-soft); }
+    .classify-mini-feedback.warn { background:var(--yellow-soft); }
+    .classify-summary { display:grid; gap:9px; margin-top:16px; }
+    .classify-summary-row { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:12px; align-items:center; padding:11px 13px; border:1px solid var(--line); border-radius:13px; background:var(--surface); }
+    .classify-summary-row span:last-child { font-size:.78rem; font-weight:900; color:var(--accent); text-align:right; }
 
     .vendor-grid { align-items:stretch; }
     .vendor { cursor:default; display:flex; flex-direction:column; position:relative; overflow:hidden; }
@@ -794,12 +823,12 @@
         context: 'Veja cada situação e escolha: pode usar, depende ou não desta forma. É um exercício educativo para pensar antes de compartilhar informações.',
         type: 'classification',
         items: [
-          { id:'paper', name:'Artigo científico público', hint:'sem dados pessoais', target:'green' },
-          { id:'question', name:'Pergunta médica geral', hint:'sem dados do paciente', target:'green' },
-          { id:'anon', name:'Caso clínico sem nome nem identificação direta', hint:'ainda exige contexto e cuidado', target:'yellow' },
-          { id:'xray', name:'Imagem médica que identifica o paciente', hint:'informação pessoal de saúde', target:'red' },
-          { id:'full', name:'Nome + CPF + diagnóstico', hint:'informações pessoais e de saúde', target:'red' },
-          { id:'policy', name:'Protocolo institucional público', hint:'conteúdo não pessoal', target:'green' }
+          { id:'paper', name:'Artigo científico público', hint:'Não contém informações pessoais.', target:'green', why:'É conteúdo público e sem dados do paciente. Ainda vale conferir a fonte e revisar o que a IA responder.' },
+          { id:'question', name:'Pergunta médica geral', hint:'Ex.: “Quais são as causas mais comuns de dor lombar?”', target:'green', why:'Uma pergunta geral, sem informações do paciente, pode ser usada para pesquisa e apoio. A resposta ainda precisa ser conferida.' },
+          { id:'anon', name:'Caso clínico sem identificação', hint:'Sem nome, CPF ou outra identificação direta.', target:'yellow', why:'Mesmo sem nome, o contexto pode revelar quem é a pessoa. Depende da ferramenta, do motivo do uso e das regras da instituição.' },
+          { id:'xray', name:'Imagem médica com identificação do paciente', hint:'A imagem ou o arquivo permite identificar a pessoa.', target:'red', why:'Informações de saúde identificáveis precisam de proteção reforçada. Não envie dessa forma para uma ferramenta sem autorização e segurança adequadas.' },
+          { id:'full', name:'Nome + CPF + diagnóstico', hint:'Identifica diretamente a pessoa e informa sua condição de saúde.', target:'red', why:'Esse conjunto identifica claramente o paciente e inclui informação de saúde. Não deve ser compartilhado dessa forma em uma ferramenta sem ambiente autorizado e protegido.' },
+          { id:'policy', name:'Protocolo institucional público', hint:'Documento público e sem informações de pacientes.', target:'green', why:'Por ser público e não conter dados pessoais, pode ser usado para consulta, resumo ou comparação. Ainda é importante conferir o resultado.' }
         ]
       },
       {
@@ -1001,41 +1030,86 @@
 
     function renderClassification(m){
       const body=$('#missionBody');
+      let current=0;
+      state.dataAssignments={};
+      const zoneMeta={
+        green:{icon:'✅',label:'Pode usar',desc:'Nesta situação, o risco é baixo.'},
+        yellow:{icon:'⚠️',label:'Depende',desc:'É preciso olhar o contexto antes.'},
+        red:{icon:'🛑',label:'Não desta forma',desc:'Antes, é preciso proteger melhor as informações.'}
+      };
+
       body.innerHTML=`
-        <div class="decision-label">🛡️ coloque cada item no lugar mais seguro</div>
-        <div class="drag-board">
-          <div><h3>Itens para classificar</h3><p style="color:var(--muted)">Toque em um item e depois escolha uma das três opções. Você pode revisar antes de confirmar.</p><div class="data-cards" id="dataCards">${m.items.map(x=>`<button class="data-card" data-id="${x.id}"><strong>${x.name}</strong><small>${x.hint}</small></button>`).join('')}</div></div>
-          <div class="bins" id="bins">
-            <button class="bin" data-zone="green"><strong>✅ PODE USAR</strong><span>Baixo risco nesta situação</span><div class="bin-items"></div></button>
-            <button class="bin" data-zone="yellow"><strong>⚠️ DEPENDE</strong><span>Precisa olhar o contexto e a ferramenta usada</span><div class="bin-items"></div></button>
-            <button class="bin" data-zone="red"><strong>🛑 NÃO DESTA FORMA</strong><span>É preciso proteger melhor essas informações</span><div class="bin-items"></div></button>
+        <div class="decision-label">🛡️ responda uma situação por vez</div>
+        <div class="classify-wrap">
+          <div class="classify-progress">
+            <span id="classifyProgressText">Situação 1 de ${m.items.length}</span>
+            <div class="classify-progress-track" aria-hidden="true"><span id="classifyProgressBar" style="width:${100/m.items.length}%"></span></div>
           </div>
-          <div class="packet-counter"><span class="packet-led"></span><span id="packetCount">0 de ${m.items.length} itens classificados</span></div>
-        </div>
-        <div class="feedback game-feedback" id="feedback"></div>
-        <div class="mission-actions"><button class="primary" id="finishClass" disabled>Confirmar escolhas ${icon('i-arrow')}</button></div>`;
-      let selected=null;
-      $$('.data-card',body).forEach(btn=>btn.addEventListener('click',()=>{
-        if(btn.classList.contains('assigned')) return;
-        $$('.data-card',body).forEach(x=>x.classList.remove('selected')); btn.classList.add('selected'); selected=btn.dataset.id; announce(`${btn.innerText}. Agora escolha uma zona.`);
-      }));
-      $$('.bin',body).forEach(bin=>bin.addEventListener('click',()=>{
-        if(!selected){toast('Primeiro escolha um item.'); return;}
-        state.dataAssignments[selected]=bin.dataset.zone;
-        const item=m.items.find(x=>x.id===selected); bin.querySelector('.bin-items').insertAdjacentHTML('beforeend',`<span class="mini-tag">${item.name}</span>`);
-        const card=$(`.data-card[data-id="${selected}"]`,body); card.classList.add('assigned'); card.classList.remove('selected'); selected=null;
-        const done=Object.keys(state.dataAssignments).length; $('#packetCount').textContent=`${done} de ${m.items.length} itens classificados`; if(done===m.items.length) $('#finishClass').disabled=false;
-      }));
-      $('#finishClass').addEventListener('click',()=>{
-        if(body.dataset.done) return; body.dataset.done='1';
+          <div class="classify-card" id="classifyCard"></div>
+          <div class="classify-mini-feedback" id="classifyMiniFeedback" role="status" aria-live="polite"></div>
+          <div class="mission-actions"><button class="primary" id="classifyNext" disabled>Próxima situação ${icon('i-arrow')}</button></div>
+        </div>`;
+
+      const card=$('#classifyCard');
+      const mini=$('#classifyMiniFeedback');
+      const next=$('#classifyNext');
+
+      function paintItem(){
+        const item=m.items[current];
+        $('#classifyProgressText').textContent=`Situação ${current+1} de ${m.items.length}`;
+        $('#classifyProgressBar').style.width=`${((current+1)/m.items.length)*100}%`;
+        mini.className='classify-mini-feedback'; mini.innerHTML='';
+        next.disabled=true;
+        next.innerHTML=current===m.items.length-1?`Ver resultado desta missão ${icon('i-arrow')}`:`Próxima situação ${icon('i-arrow')}`;
+        card.innerHTML=`
+          <div class="count">Situação ${current+1}</div>
+          <h3>${item.name}</h3>
+          <p>${item.hint}</p>
+          <div class="classify-question">Você usaria isso em uma ferramenta de IA?</div>
+          <div class="classify-options">
+            ${Object.entries(zoneMeta).map(([zone,z])=>`<button class="classify-option" data-zone="${zone}"><div style="font-size:1.25rem;line-height:1">${z.icon}</div><div><strong>${z.label}</strong><span>${z.desc}</span></div></button>`).join('')}
+          </div>`;
+        $$('.classify-option',card).forEach(btn=>btn.addEventListener('click',()=>choose(btn.dataset.zone)));
+        announce(`Situação ${current+1}: ${item.name}. Escolha: pode usar, depende ou não desta forma.`);
+      }
+
+      function choose(zone){
+        const item=m.items[current];
+        if(state.dataAssignments[item.id]) return;
+        state.dataAssignments[item.id]=zone;
+        const correct=zone===item.target;
+        $$('.classify-option',card).forEach(btn=>{
+          btn.disabled=true;
+          if(btn.dataset.zone===zone) btn.classList.add('selected',correct?'correct':'wrong');
+          if(!correct && btn.dataset.zone===item.target) btn.classList.add('correct');
+        });
+        const expected=zoneMeta[item.target];
+        mini.className=`classify-mini-feedback show ${correct?'good':'warn'}`;
+        mini.innerHTML=`<strong>${correct?'Boa escolha.':'Vale olhar com mais cuidado.'}</strong><p style="margin-top:6px">${item.why}</p>${correct?'':`<p style="margin-top:8px"><strong>Nesta situação:</strong> ${expected.icon} ${expected.label}.</p>`}`;
+        next.disabled=false;
+        if(correct && navigator.vibrate) navigator.vibrate(10);
+      }
+
+      function finishClassification(){
         let correct=0; m.items.forEach(x=>{if(state.dataAssignments[x.id]===x.target) correct++;});
-        const ratio=correct/m.items.length; const tone=ratio>=.8?'good':ratio>=.5?'warn':'bad'; const impact={safety:Math.round(ratio*3),data:Math.round(ratio*4),governance:Math.round(ratio*3),value:1}; applyImpact(impact); const xp=awardGame(tone,Math.round(70+ratio*90));
+        const ratio=correct/m.items.length;
+        const tone=ratio>=.8?'good':ratio>=.5?'warn':'bad';
+        const impact={safety:Math.round(ratio*3),data:Math.round(ratio*4),governance:Math.round(ratio*3),value:1};
+        applyImpact(impact); const xp=awardGame(tone,Math.round(70+ratio*90));
         if(correct===m.items.length) unlockAchievement('privacy');
-        const title=ratio>=.8?'Boa leitura de risco':'Algumas escolhas pedem mais cuidado'; recordOutcome(tone,title);
-        const bodycopy=`Você classificou ${correct} de ${m.items.length} situações conforme a lógica desta simulação. Dados de saúde identificáveis exigem proteção reforçada. Mesmo retirando nome e dados que identifiquem a pessoa, ainda é preciso pensar no motivo do uso, na segurança e no contexto.`;
-        const fb=$('#feedback'); fb.className=`feedback game-feedback show ${tone}`; fb.innerHTML=richFeedback(tone,title,bodycopy,impact,xp);
-        $('#finishClass').textContent='Ir para a próxima missão'; $('#finishClass').disabled=false; $('#finishClass').onclick=nextMission; announce(`Você classificou ${correct} de ${m.items.length} situações conforme a lógica da simulação.`);
+        const title=ratio>=.8?'Boa leitura das situações':'Algumas situações pedem mais cuidado'; recordOutcome(tone,title);
+        const answerLabel=z=>`${zoneMeta[z].icon} ${zoneMeta[z].label}`;
+        const summary=m.items.map(item=>`<div class="classify-summary-row"><span>${item.name}</span><span>${answerLabel(item.target)}</span></div>`).join('');
+        body.innerHTML=`<div class="feedback game-feedback show ${tone}">${richFeedback(tone,title,`Você acertou ${correct} de ${m.items.length}. A regra mais simples é: quanto mais uma informação puder identificar uma pessoa ou influenciar seu cuidado, maior deve ser a proteção e o cuidado com a ferramenta usada.`,impact,xp)}</div><div class="classify-summary" aria-label="Resumo das respostas">${summary}</div><div class="mission-actions"><button class="primary" id="classifyDone">Ir para a próxima missão ${icon('i-arrow')}</button></div>`;
+        $('#classifyDone').addEventListener('click',nextMission);
+        announce(`Você acertou ${correct} de ${m.items.length}.`);
+      }
+
+      next.addEventListener('click',()=>{
+        if(current<m.items.length-1){ current++; paintItem(); card.scrollIntoView({behavior:document.documentElement.classList.contains('reduce-motion')?'auto':'smooth',block:'center'}); }
+        else finishClassification();
       });
+      paintItem();
     }
 
     function renderVendors(m){
