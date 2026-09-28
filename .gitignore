@@ -1,0 +1,5 @@
+# Arquivos de verificação local; não fazem parte do game publicado.
+qa/*.png
+qa/*.pdf
+qa/*.txt
+desktop.ini
